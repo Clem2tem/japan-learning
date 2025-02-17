@@ -111,7 +111,7 @@ export default function HandwritingCanvas(): React.JSX.Element {
 
   const japaneseText = text.trim().split('').filter((char: string) => char in romajiMap).join('');
       setHiragana(japaneseText);
-      const romajiText = convertToRomaji(japaneseText);
+      const romajiText = japaneseText.split('').map((char: string) => convertToRomaji(char)).join('');
       setRomaji("");
       setTimeout(() => setRomaji(romajiText), 500);
 
