@@ -1,36 +1,38 @@
 "use client";
 
-import React from "react";
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/app/components/ui/button";
 
 export default function HandwritingCanvas(): React.JSX.Element {
+  const romajiMap: { [key: string]: string } = {
+    'あ': 'a', 'い': 'i', 'う': 'u', 'え': 'e', 'お': 'o',
+    'か': 'ka', 'き': 'ki', 'く': 'ku', 'け': 'ke', 'こ': 'ko',
+    'さ': 'sa', 'し': 'shi', 'す': 'su', 'せ': 'se', 'そ': 'so',
+    'た': 'ta', 'ち': 'chi', 'つ': 'tsu', 'て': 'te', 'と': 'to',
+    'な': 'na', 'に': 'ni', 'ぬ': 'nu', 'ね': 'ne', 'の': 'no',
+    'は': 'ha', 'ひ': 'hi', 'ふ': 'fu', 'へ': 'he', 'ほ': 'ho',
+    'ま': 'ma', 'み': 'mi', 'む': 'mu', 'め': 'me', 'も': 'mo',
+    'や': 'ya', 'ゆ': 'yu', 'よ': 'yo',
+    'ら': 'ra', 'り': 'ri', 'る': 'ru', 'れ': 're', 'ろ': 'ro',
+    'わ': 'wa', 'を': 'wo', 'ん': 'n'
+  };
+
   function convertToRomaji(japaneseText: string): string {
-    const romajiMap: { [key: string]: string } = {
-      'あ': 'a', 'い': 'i', 'う': 'u', 'え': 'e', 'お': 'o',
-      'か': 'ka', 'き': 'ki', 'く': 'ku', 'け': 'ke', 'こ': 'ko',
-      'さ': 'sa', 'し': 'shi', 'す': 'su', 'せ': 'se', 'そ': 'so',
-      'た': 'ta', 'ち': 'chi', 'つ': 'tsu', 'て': 'te', 'と': 'to',
-      'な': 'na', 'に': 'ni', 'ぬ': 'nu', 'ね': 'ne', 'の': 'no',
-      'は': 'ha', 'ひ': 'hi', 'ふ': 'fu', 'へ': 'he', 'ほ': 'ho',
-      'ま': 'ma', 'み': 'mi', 'む': 'mu', 'め': 'me', 'も': 'mo',
-      'や': 'ya', 'ゆ': 'yu', 'よ': 'yo',
-      'ら': 'ra', 'り': 'ri', 'る': 'ru', 'れ': 're', 'ろ': 'ro',
-      'わ': 'wa', 'を': 'wo', 'ん': 'n'
+    return japaneseText.split('').map(char => romajiMap[char] || "").join('');
   }
-    return romajiMap[japaneseText] || "Non reconnu";
-  }
+
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [isDrawing, setIsDrawing] = useState<boolean>(false);
-  const [romaji, setRomaji] = useState<string>("");
-  const [hiragana, setHiragana] = useState<string>("");
-  const [imageData, setImageData] = useState<string>("");
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [isErasing, setIsErasing] = useState(false);
+  const [romaji, setRomaji] = useState("");
+  const [hiragana, setHiragana] = useState("");
+  const [imageData, setImageData] = useState("");
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas) {
-      canvas.width = 300;
-      canvas.height = 300;
+      canvas.width = 900;
+      canvas.height = 360;
       const ctx = canvas.getContext("2d");
       if (ctx) {
         ctx.fillStyle = "white";
@@ -52,8 +54,12 @@ export default function HandwritingCanvas(): React.JSX.Element {
     if (!isDrawing) return;
     const ctx = canvasRef.current?.getContext("2d");
     if (ctx) {
+      ctx.strokeStyle = isErasing ? "white" : "black";
+      ctx.lineWidth = isErasing ? 15 : 3;
       ctx.lineTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY);
       ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY);
     }
   };
 
@@ -86,6 +92,8 @@ export default function HandwritingCanvas(): React.JSX.Element {
             {
               image: { content: imageData.split(",")[1] },
               features: [{ type: "TEXT_DETECTION" }],
+              imageContext: {
+                languageHints: ["ja-t-i0-handwrit"]},
             },
           ],
         }),
@@ -96,30 +104,15 @@ export default function HandwritingCanvas(): React.JSX.Element {
         throw new Error("No response from Google Cloud Vision API");
       }
       const text = result.responses[0]?.fullTextAnnotation?.text || "Aucun texte détecté";
-      const romajiMap: { [key: string]: string } = {
-      'あ': 'a', 'い': 'i', 'う': 'u', 'え': 'e', 'お': 'o',
-      'か': 'ka', 'き': 'ki', 'く': 'ku', 'け': 'ke', 'こ': 'ko',
-      'さ': 'sa', 'し': 'shi', 'す': 'su', 'せ': 'se', 'そ': 'so',
-      'た': 'ta', 'ち': 'chi', 'つ': 'tsu', 'て': 'te', 'と': 'to',
-      'な': 'na', 'に': 'ni', 'ぬ': 'nu', 'ね': 'ne', 'の': 'no',
-      'は': 'ha', 'ひ': 'hi', 'ふ': 'fu', 'へ': 'he', 'ほ': 'ho',
-      'ま': 'ma', 'み': 'mi', 'む': 'mu', 'め': 'me', 'も': 'mo',
-      'や': 'ya', 'ゆ': 'yu', 'よ': 'yo',
-      'ら': 'ra', 'り': 'ri', 'る': 'ru', 'れ': 're', 'ろ': 'ro',
-      'わ': 'wa', 'を': 'wo', 'ん': 'n'
-  };
-
-  const japaneseText = text.trim().split('').filter((char: string) => char in romajiMap).join('');
+      const japaneseText = text.trim().split('').join('');
       setHiragana(japaneseText);
-      const romajiText = japaneseText.split('').map((char: string) => convertToRomaji(char)).join('');
-      setRomaji("");
-      setTimeout(() => setRomaji(romajiText), 500);
+      const romajiText = convertToRomaji(japaneseText);
+      setRomaji(romajiText);
 
-      // Ajouter la prononciation
       const synth = window.speechSynthesis;
       const utterance = new SpeechSynthesisUtterance(romajiText);
-      utterance.lang = 'fr-FR';
-      utterance.rate = 0.9; // Ajuste la vitesse si nécessaire
+      utterance.lang = "fr-FR";
+      utterance.rate = 0.9;
       synth.speak(utterance);
     } catch (error) {
       console.error("Erreur de reconnaissance :", error);
@@ -138,6 +131,7 @@ export default function HandwritingCanvas(): React.JSX.Element {
         onMouseOut={stopDrawing}
       ></canvas>
       <div className="flex gap-2">
+        <Button onClick={() => setIsErasing(!isErasing)} variant="default">{isErasing ? "Dessin" : "Gomme"}</Button>
         <Button onClick={recognizeCharacter}>Reconnaître</Button>
         <Button onClick={clearCanvas} variant="destructive">Effacer</Button>
       </div>
