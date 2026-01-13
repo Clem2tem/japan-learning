@@ -1,9 +1,8 @@
-import HandwritingCanvas from "@/app/components/HandwritingCanvas";
+import HandwritingCanvas from "@/app/components/HandWritingCanvas";
 
 export default function Home() {
   return (
-    <div className="flex flex-col items-center min-h-screen justify-center">
-      <h1 className="text-2xl font-bold mb-4">Reconnaissance d&apos;écriture</h1>
+    <div className="flex flex-col items-center min-h-screen justify-center bg-slate-500 py-12">
       <HandwritingCanvas />
     </div>
   );
